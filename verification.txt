@@ -1,0 +1,80 @@
+SQLite $ python manage.py check
+System check identified no issues (0 silenced).
+
+SQLite $ python manage.py makemigrations --check --dry-run
+No changes detected
+
+SQLite $ python manage.py test -v 1
+Found 25 test(s).
+System check identified no issues (0 silenced).
+Creating test database for alias 'default'...
+
+....Approval integration failed
+Traceback (most recent call last):
+  File "C:\Users\DELL\OneDrive\School\Django Assignments\newsroom\news\services.py", line 62, in deliver_article
+    response = requests.post(
+        settings.APPROVAL_API_URL,
+    ...<2 lines>...
+        timeout=5,
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+requests.exceptions.Timeout: offline
+.....................
+----------------------------------------------------------------------
+Ran 25 tests in 1.817s
+
+OK
+Destroying test database for alias 'default'...
+
+
+MariaDB $ python manage.py check
+System check identified no issues (0 silenced).
+
+MariaDB $ python manage.py makemigrations --check --dry-run
+No changes detected
+
+MariaDB $ python manage.py test -v 1
+Found 25 test(s).
+System check identified no issues (0 silenced).
+Creating test database for alias 'default'...
+
+....Approval integration failed
+Traceback (most recent call last):
+  File "C:\Users\DELL\OneDrive\School\Django Assignments\newsroom\news\services.py", line 62, in deliver_article
+    response = requests.post(
+        settings.APPROVAL_API_URL,
+    ...<2 lines>...
+        timeout=5,
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+requests.exceptions.Timeout: offline
+.....................
+----------------------------------------------------------------------
+Ran 25 tests in 2.452s
+
+OK
+Destroying test database for alias 'default'...
+
+
+manage.py collectstatic --noinput
+
+155 static files copied to 'C:\Users\DELL\OneDrive\School\Django Assignments\newsroom\staticfiles'.
+
+-m flake8 .
+
+25 tests passed on SQLite and MariaDB. TLS verification remained enabled.
+Browser checks: editor login -> dashboard -> approve draft -> email=True and internal API log=True.
