@@ -48,7 +48,7 @@ and test output. Migration files are included and must not be deleted.
 ## Accounts and email
 
 No real credentials, private tokens or user databases are in the submission.
-Register a normal account through /register/. The application uses Django
+Register through /register/ and choose Reader, Editor or Journalist. The application uses Django
 sessions for browser login. Optional admin is at /admin/ after createsuperuser.
 Passwords use Django hashing and validation. Password recovery is at
 /accounts/password_reset/ with a 15-minute, invalidated-after-use token.
@@ -90,12 +90,15 @@ development server publicly.
 
 ## News roles and subscriptions
 
-Public registration creates Readers only. A superuser assigns Journalist and
-Editor roles through admin > Users > News role. Role changes synchronise group
+Public coursework registration lets users choose Reader, Editor or Journalist.
+The post-save signal assigns the corresponding group and permissions. Role changes synchronise group
 membership. The migrations configure appropriate model permissions per group;
 views/API enforce role and ownership in addition to group membership.
 
-Create Publishers through admin, assign their editors/journalists, then use
+Editors open Publishers > Create publisher, select themselves and their
+editor/journalist team, then save. Assigned editors use Manage publisher to
+update details or membership. Readers and journalists can browse publisher
+teams but cannot change them. No superuser is required. Then use
 Journalist dashboard to write articles or newsletters. Blank publisher means
 independent reporting. Readers manage subscriptions through their dashboard.
 Editor dashboard reviews drafts and approves publication. Edits require
@@ -127,3 +130,28 @@ All four required serializers (Article, User, Newsletter and Publisher) are
 in news/serializers.py. User output excludes secrets and passwords. See
 Planning/design.md for explicit interpretations of None on M:N fields and
 the distinction between the all-approved and subscribed feeds.
+
+
+## Review revision: configuration and front-end workflows
+
+After cloning and installing requirements, run the following in PowerShell
+from the project folder containing manage.py:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+Replace the sample secret, database password, username, name and port with your
+local MariaDB values, then save and close Notepad. python-dotenv loads this
+file automatically. Existing shell variables take precedence. The real .env
+is excluded from Git and submission archives. The supplied example selects
+MariaDB; SQL setup and migration commands are documented above. Email defaults
+to console output for local tests. Start on port 8022 to match the callback.
+
+Registration now exposes the three requested roles. This intentionally allows
+editor self-registration in the coursework; a public production deployment
+should require approval or invitation for privileged roles. Editor accounts
+can create publishers and assign members directly from Publishers, and only
+assigned editors can manage an existing publisher. The form prevents accidental
+removal of the managing editor. Publisher creation requires no admin access.

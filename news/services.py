@@ -1,3 +1,5 @@
+"""Services for the News application."""
+
 import logging
 import requests
 from django.conf import settings
@@ -10,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def approve_article(article, editor):
+    """Commit editor approval before scheduling notification delivery."""
     from .policies import is_editor
 
     if not is_editor(editor):
@@ -19,11 +22,13 @@ def approve_article(article, editor):
         article.approved = True
         article.save(update_fields=["approved"])
         PublicationDelivery.objects.get_or_create(article=article)
+        # Deliver only after committed data is visible to the HTTP callback.
         transaction.on_commit(lambda: deliver_article(article.pk, editor.pk))
     return article
 
 
 def deliver_article(article_id, editor_id):
+    """Deliver approval email and API logging with recorded retry state."""
     article = Article.objects.get(pk=article_id)
     delivery, _ = PublicationDelivery.objects.get_or_create(article=article)
     if not article.approved:

@@ -6,8 +6,8 @@ Readers browse approved articles and newsletters and subscribe to publishers
 or independent journalists. Journalists create articles, edit/delete their
 own work and curate newsletters. Editors review drafts, edit/delete content,
 approve articles and curate newsletters. Article creation remains journalist
-only. Public registration creates readers; trusted administration assigns
-editor/journalist roles, avoiding self-service privilege escalation.
+only. Public registration exposes Reader, Editor and Journalist roles for this
+coursework. Assigned editors manage publishers through front-end forms.
 
 ## Normalisation and role fields
 
@@ -76,3 +76,7 @@ input. Deletes require a confirmation page and POST. Unknown objects return
 404, missing authentication 401 (API), and forbidden actions 403. Layout adapts
 to small screens with visible keyboard focus. Automated tests mock email and
 HTTP integration and cover both successful and failed requests.
+
+Review update: role self-selection and publisher management are available
+through ordinary front-end forms. Publisher changes require assigned-editor
+membership. Production should gate privileged role registration.

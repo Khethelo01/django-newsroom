@@ -1,3 +1,5 @@
+"""Urls for the News application."""
+
 from django.urls import path
 from . import views, api
 
@@ -5,6 +7,13 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("register/", views.register, name="register"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("publishers/", views.publisher_list, name="publishers"),
+    path("publishers/new/", views.publisher_edit, name="publisher-create"),
+    path(
+        "publishers/<int:pk>/edit/",
+        views.publisher_edit,
+        name="publisher-edit",
+    ),
     path("subscriptions/", views.subscriptions, name="subscriptions"),
     path("articles/new/", views.article_edit, name="article-create"),
     path("articles/<int:pk>/", views.article_detail, name="article"),

@@ -2,8 +2,10 @@
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env", override=False)
 # This fallback is for local coursework only. Set an environment key to deploy.
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "local-coursework-only-sticky-notes-development-key"

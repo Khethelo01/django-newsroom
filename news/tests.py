@@ -1,3 +1,5 @@
+"""Tests for the News application."""
+
 from unittest.mock import patch
 import requests
 from django.core import mail
@@ -18,7 +20,10 @@ from .services import deliver_article
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
 )
 class NewsTests(TestCase):
+    """Newstests for the News application."""
+
     def setUp(self):
+        """Create isolated role accounts, publishers and article fixtures."""
         self.reader = User.objects.create_user(
             "reader", email="reader@example.com", role="reader"
         )
@@ -47,23 +52,28 @@ class NewsTests(TestCase):
         self.api = APIClient()
 
     def test_role_group(self):
+        """Verify role group."""
         self.assertTrue(self.reader.groups.filter(name="Reader").exists())
         self.assertTrue(self.writer.groups.filter(name="Journalist").exists())
 
     def test_irrelevant_fields_none(self):
+        """Verify irrelevant fields none."""
         self.assertIsNone(self.writer.reader_subscriptions)
         self.assertIsNone(self.reader.independent_articles)
 
     def test_non_reader_subscriptions_blocked(self):
+        """Verify non reader subscriptions blocked."""
         from django.core.exceptions import ValidationError
 
         with self.assertRaises(ValidationError):
             self.writer.publisher_subscriptions.add(self.publisher)
 
     def test_authentication_required(self):
+        """Verify authentication required."""
         self.assertEqual(self.api.get("/api/articles/").status_code, 401)
 
     def test_all_list_only_approved(self):
+        """Verify all list only approved."""
         self.api.force_authenticate(self.reader)
         self.assertEqual(
             {x["id"] for x in self.api.get("/api/articles/").data},
@@ -71,6 +81,7 @@ class NewsTests(TestCase):
         )
 
     def test_publisher_subscriptions(self):
+        """Verify publisher subscriptions."""
         self.reader.publisher_subscriptions.add(self.publisher)
         self.api.force_authenticate(self.reader)
         self.assertEqual(
@@ -79,6 +90,7 @@ class NewsTests(TestCase):
         )
 
     def test_journalist_subscriptions(self):
+        """Verify journalist subscriptions."""
         self.reader.journalist_subscriptions.add(self.other)
         self.api.force_authenticate(self.reader)
         self.assertEqual(
@@ -87,10 +99,12 @@ class NewsTests(TestCase):
         )
 
     def test_empty_subscriptions(self):
+        """Verify empty subscriptions."""
         self.api.force_authenticate(self.reader)
         self.assertEqual(self.api.get("/api/articles/subscribed/").data, [])
 
     def test_journalist_create_ignores_approval_input(self):
+        """Verify journalist create ignores approval input."""
         self.api.force_authenticate(self.writer)
         result = self.api.post(
             "/api/articles/",
@@ -101,6 +115,7 @@ class NewsTests(TestCase):
         self.assertFalse(result.data["approved"])
 
     def test_reader_and_editor_cannot_create_article(self):
+        """Verify reader and editor cannot create article."""
         for user in [self.reader, self.editor]:
             self.api.force_authenticate(user)
             self.assertEqual(
@@ -108,6 +123,7 @@ class NewsTests(TestCase):
             )
 
     def test_foreign_publisher_rejected(self):
+        """Verify foreign publisher rejected."""
         self.api.force_authenticate(self.other)
         result = self.api.post(
             "/api/articles/",
@@ -121,12 +137,14 @@ class NewsTests(TestCase):
         self.assertEqual(result.status_code, 400)
 
     def test_reader_cannot_read_draft(self):
+        """Verify reader cannot read draft."""
         self.api.force_authenticate(self.reader)
         self.assertEqual(
             self.api.get(f"/api/articles/{self.article.pk}/").status_code, 404
         )
 
     def test_foreign_writer_cannot_modify(self):
+        """Verify foreign writer cannot modify."""
         self.api.force_authenticate(self.other)
         self.assertEqual(
             self.api.put(f"/api/articles/{self.article.pk}/", {}).status_code,
@@ -138,6 +156,7 @@ class NewsTests(TestCase):
         )
 
     def test_reader_cannot_modify(self):
+        """Verify reader cannot modify."""
         self.api.force_authenticate(self.reader)
         self.assertEqual(
             self.api.delete(f"/api/articles/{self.published.pk}/").status_code,
@@ -145,6 +164,7 @@ class NewsTests(TestCase):
         )
 
     def test_editor_delete(self):
+        """Verify editor delete."""
         self.api.force_authenticate(self.editor)
         self.assertEqual(
             self.api.delete(f"/api/articles/{self.article.pk}/").status_code,
@@ -152,6 +172,7 @@ class NewsTests(TestCase):
         )
 
     def test_update_requires_reapproval(self):
+        """Verify update requires reapproval."""
         self.api.force_authenticate(self.writer)
         result = self.api.put(
             f"/api/articles/{self.published.pk}/",
@@ -166,6 +187,7 @@ class NewsTests(TestCase):
         self.assertFalse(result.data["approved"])
 
     def test_only_editor_can_approve(self):
+        """Verify only editor can approve."""
         for user in [self.reader, self.writer]:
             self.api.force_authenticate(user)
             self.assertEqual(
@@ -177,6 +199,7 @@ class NewsTests(TestCase):
 
     @patch("news.services.deliver_article")
     def test_editor_approves_after_commit(self, deliver):
+        """Verify editor approves after commit."""
         self.api.force_authenticate(self.editor)
         with self.captureOnCommitCallbacks(execute=True):
             result = self.api.post(f"/api/articles/{self.article.pk}/approve/")
@@ -185,6 +208,7 @@ class NewsTests(TestCase):
 
     @patch("news.services.requests.post")
     def test_delivery_and_idempotent_retry(self, post):
+        """Verify delivery and idempotent retry."""
         self.reader.publisher_subscriptions.add(self.publisher)
         deliver_article(self.published.pk, self.editor.pk)
         self.assertEqual(len(mail.outbox), 1)
@@ -199,12 +223,14 @@ class NewsTests(TestCase):
         "news.services.requests.post", side_effect=requests.Timeout("offline")
     )
     def test_delivery_failure_recorded(self, post):
+        """Verify delivery failure recorded."""
         deliver_article(self.published.pk, self.editor.pk)
         delivery = PublicationDelivery.objects.get(article=self.published)
         self.assertFalse(delivery.api_sent)
         self.assertIn("offline", delivery.last_error)
 
     def test_approval_log_protected_idempotent(self):
+        """Verify approval log protected idempotent."""
         self.api.force_authenticate(self.reader)
         self.assertEqual(
             self.api.post(
@@ -228,6 +254,7 @@ class NewsTests(TestCase):
         self.assertEqual(ApprovalLog.objects.count(), 1)
 
     def test_newsletter_create_read_and_reader_write_denied(self):
+        """Verify newsletter create read and reader write denied."""
         self.api.force_authenticate(self.writer)
         result = self.api.post(
             "/api/newsletters/",
@@ -248,6 +275,7 @@ class NewsTests(TestCase):
         )
 
     def test_newsletter_rejects_drafts(self):
+        """Verify newsletter rejects drafts."""
         self.api.force_authenticate(self.writer)
         result = self.api.post(
             "/api/newsletters/",
@@ -261,6 +289,7 @@ class NewsTests(TestCase):
         self.assertEqual(result.status_code, 400)
 
     def test_newsletter_owner_checks(self):
+        """Verify newsletter owner checks."""
         obj = Newsletter.objects.create(
             title="Weekly", description="Text", author=self.writer
         )
@@ -274,6 +303,7 @@ class NewsTests(TestCase):
         )
 
     def test_token_authentication(self):
+        """Verify token authentication."""
         self.reader.set_password("Password!234")
         self.reader.save()
         result = self.api.post(

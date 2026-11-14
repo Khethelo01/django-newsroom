@@ -1,3 +1,5 @@
+"""Api for the News application."""
+
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -13,6 +15,7 @@ from .services import approve_article
 
 @api_view(["GET", "POST"])
 def articles(request):
+    """Articles for the News application."""
     if request.method == "GET":
         return Response(
             ArticleSerializer(
@@ -31,6 +34,7 @@ def articles(request):
 
 @api_view(["GET"])
 def subscribed(request):
+    """Subscribed for the News application."""
     if request.user.role != "reader":
         return Response({"detail": "Readers only."}, status=403)
     return Response(
@@ -40,6 +44,7 @@ def subscribed(request):
 
 @api_view(["GET", "PUT", "DELETE"])
 def article_detail(request, pk):
+    """Article detail for the News application."""
     article = get_object_or_404(Article, pk=pk)
     if request.method == "GET":
         if not article.approved and not can_edit(request.user, article):
@@ -64,6 +69,7 @@ def article_detail(request, pk):
 
 @api_view(["POST"])
 def approve(request, pk):
+    """Approve for the News application."""
     if not is_editor(request.user):
         return Response({"detail": "Editors only."}, status=403)
     article = get_object_or_404(Article, pk=pk)
@@ -74,6 +80,7 @@ def approve(request, pk):
 
 @api_view(["POST"])
 def approved_log(request):
+    """Approved log for the News application."""
     if not is_editor(request.user):
         return Response({"detail": "Editors only."}, status=403)
     article_id = request.data.get("article")
@@ -90,6 +97,7 @@ def approved_log(request):
 
 @api_view(["GET", "POST"])
 def newsletters(request):
+    """Newsletters for the News application."""
     if request.method == "GET":
         return Response(
             NewsletterSerializer(Newsletter.objects.all(), many=True).data
@@ -108,6 +116,7 @@ def newsletters(request):
 
 @api_view(["GET", "PUT", "DELETE"])
 def newsletter_detail(request, pk):
+    """Newsletter detail for the News application."""
     newsletter = get_object_or_404(Newsletter, pk=pk)
     if request.method == "GET":
         return Response(NewsletterSerializer(newsletter).data)
@@ -132,6 +141,7 @@ def newsletter_detail(request, pk):
 
 @api_view(["GET"])
 def publishers(request):
+    """Publishers for the News application."""
     return Response(
         PublisherSerializer(Publisher.objects.all(), many=True).data
     )
